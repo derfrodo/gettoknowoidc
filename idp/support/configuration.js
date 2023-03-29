@@ -1,3 +1,5 @@
+import { getClientsForConfig, clients } from "./clients.js";
+
 export default {
   clients: [
     // {
@@ -6,6 +8,7 @@ export default {
     //   grant_types: ['refresh_token', 'authorization_code'],
     //   redirect_uris: ['http://sso-client.dev/providers/7/open_id', 'http://sso-client.dev/providers/8/open_id'],
     // }
+    ...getClientsForConfig(clients)
   ],
   interactions: {
     url(ctx, interaction) { // eslint-disable-line no-unused-vars
@@ -27,6 +30,23 @@ export default {
 
     deviceFlow: { enabled: true }, // defaults to false
     revocation: { enabled: true }, // defaults to false
+    clientCredentials: { enabled: true },
+    resourceIndicators: {
+      enabled: true,
+      getResourceServerInfo: async (ctx, resource) => {
+
+        const client = clients.find(c => c.resourceId === resource);
+        if (client) {
+          return {
+            audience: resource,
+            scope: client.scopes.join(" ")
+          };
+        }
+
+        throw new errors.InvalidTarget();
+      }
+    }
+
   },
   jwks: {
     keys: [
